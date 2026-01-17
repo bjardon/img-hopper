@@ -77,21 +77,23 @@ export function useImageConverter() {
     // Signal abort for any ongoing conversions
     abortRef.current = true
 
-    // Revoke all blob URLs
-    files.forEach((file) => {
-      if (file.outputBlobUrl) URL.revokeObjectURL(file.outputBlobUrl)
-      if (file.thumbnailUrl) URL.revokeObjectURL(file.thumbnailUrl)
+    setFiles((prev) => {
+      // Revoke all blob URLs
+      prev.forEach((file) => {
+        if (file.outputBlobUrl) URL.revokeObjectURL(file.outputBlobUrl)
+        if (file.thumbnailUrl) URL.revokeObjectURL(file.thumbnailUrl)
+      })
+      return []
     })
+    
     blobUrlsRef.current.clear()
-
-    setFiles([])
     setIsConverting(false)
 
     // Reset abort flag after a tick
     setTimeout(() => {
       abortRef.current = false
     }, 0)
-  }, [files])
+  }, [])
 
   const updateFile = useCallback(
     (id: string, updates: Partial<ConversionFile>) => {
@@ -116,10 +118,10 @@ export function useImageConverter() {
         })
 
         // Check if conversion was aborted
-        if (abortRef.current) return
-
-        const blobUrl = URL.createObjectURL(convertedBlob)
-        blobUrlsRef.current.add(blobUrl)
+        if (abortRef.current) {
+          URL.revokeObjectURL(blobUrl)
+          return
+        }
 
         updateFile(file.id, {
           status: 'completed',
@@ -157,13 +159,15 @@ export function useImageConverter() {
       if (abortRef.current) break
 
       // Fill up to MAX_CONCURRENT
+      // Fill up to MAX_CONCURRENT
       while (queue.length > 0 && activePromises.length < MAX_CONCURRENT) {
         const file = queue.shift()!
-        const promise = convertFile(file, outputFormat).then(() => {
+        const promise = convertFile(file, outputFormat)
+        activePromises.push(promise)
+        promise.then(() => {
           const index = activePromises.indexOf(promise)
           if (index > -1) activePromises.splice(index, 1)
         })
-        activePromises.push(promise)
       }
 
       // Wait for at least one to complete before continuing
