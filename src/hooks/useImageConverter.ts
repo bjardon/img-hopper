@@ -24,10 +24,13 @@ export function useImageConverter() {
 
   const blobUrlsRef = useRef<Set<string>>(new Set())
   const abortRef = useRef(false)
+  const isConvertingRef = useRef(false)
 
   // Cleanup blob URLs on unmount
   useEffect(() => {
     return () => {
+      // Signal abort to prevent ongoing conversions from creating new blob URLs
+      abortRef.current = true
       blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [])
@@ -77,17 +80,13 @@ export function useImageConverter() {
     // Signal abort for any ongoing conversions
     abortRef.current = true
 
-    setFiles((prev) => {
-      // Revoke all blob URLs
-      prev.forEach((file) => {
-        if (file.outputBlobUrl) URL.revokeObjectURL(file.outputBlobUrl)
-        if (file.thumbnailUrl) URL.revokeObjectURL(file.thumbnailUrl)
-      })
-      return []
-    })
-    
+    // Revoke all tracked blob URLs (includes any URLs not yet reflected in state)
+    blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
     blobUrlsRef.current.clear()
+
+    setFiles([])
     setIsConverting(false)
+    isConvertingRef.current = false
 
     // Reset abort flag after a tick
     setTimeout(() => {
@@ -117,9 +116,13 @@ export function useImageConverter() {
           quality: DEFAULT_QUALITY,
         })
 
+        const blobUrl = URL.createObjectURL(convertedBlob)
+        blobUrlsRef.current.add(blobUrl)
+
         // Check if conversion was aborted
         if (abortRef.current) {
           URL.revokeObjectURL(blobUrl)
+          blobUrlsRef.current.delete(blobUrl)
           return
         }
 
@@ -144,8 +147,15 @@ export function useImageConverter() {
   )
 
   const convert = useCallback(async () => {
+    // Guard against concurrent invocations using ref (synchronous check)
+    if (isConvertingRef.current) return
+    isConvertingRef.current = true
+
     const pendingFiles = files.filter((f) => f.status === 'pending')
-    if (pendingFiles.length === 0) return
+    if (pendingFiles.length === 0) {
+      isConvertingRef.current = false
+      return
+    }
 
     setIsConverting(true)
     abortRef.current = false
@@ -177,6 +187,7 @@ export function useImageConverter() {
     }
 
     setIsConverting(false)
+    isConvertingRef.current = false
   }, [files, outputFormat, convertFile])
 
   const downloadFile = useCallback((file: ConversionFile) => {
@@ -216,6 +227,14 @@ export function useImageConverter() {
 
         const thumbnailUrl = URL.createObjectURL(thumbnailBlob)
         blobUrlsRef.current.add(thumbnailUrl)
+
+        // Check if component unmounted during conversion
+        if (abortRef.current) {
+          URL.revokeObjectURL(thumbnailUrl)
+          blobUrlsRef.current.delete(thumbnailUrl)
+          return null
+        }
+
         updateFile(id, { thumbnailUrl })
         return thumbnailUrl
       } catch {
