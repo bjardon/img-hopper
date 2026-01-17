@@ -100,6 +100,7 @@ export function useImageConverter() {
       abortRef.current = false
     }, 0)
   }, [])
+  }, [])
 
   const updateFile = useCallback(
     (id: string, updates: Partial<ConversionFile>) => {
@@ -165,6 +166,7 @@ export function useImageConverter() {
     }
 
     setIsConverting(true)
+    abortRef.current = false
 
     // Process files in batches to limit concurrency
     const queue = [...pendingFiles]
@@ -222,6 +224,7 @@ export function useImageConverter() {
       setTimeout(() => downloadFile(file), index * 100)
     })
   }, [downloadFile])
+  }, [downloadFile])
 
   const generateThumbnail = useCallback(
     async (id: string): Promise<string | null> => {
@@ -250,6 +253,7 @@ export function useImageConverter() {
         return null
       }
     },
+    [updateFile]
     [updateFile]
   )
 
