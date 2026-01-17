@@ -1,13 +1,14 @@
 import { useCallback, useRef, useState } from 'react'
-import { Upload, FileImage } from 'lucide-react'
+import { Upload, FileImage, Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface FileDropZoneProps {
   onFilesSelected: (files: FileList | File[]) => void
   disabled?: boolean
+  collapsed?: boolean
 }
 
-export function FileDropZone({ onFilesSelected, disabled }: FileDropZoneProps) {
+export function FileDropZone({ onFilesSelected, disabled, collapsed }: FileDropZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -59,6 +60,43 @@ export function FileDropZone({ onFilesSelected, disabled }: FileDropZoneProps) {
     [onFilesSelected]
   )
 
+  // Collapsed version - compact add more files button
+  if (collapsed) {
+    return (
+      <div
+        onClick={handleClick}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={cn(
+          'relative group cursor-pointer rounded-xl border-2 border-dashed transition-all duration-300',
+          'hover:border-primary/50 hover:bg-primary/5',
+          isDragOver && 'border-primary bg-primary/10',
+          disabled && 'opacity-50 cursor-not-allowed hover:border-border hover:bg-transparent',
+          !isDragOver && !disabled && 'border-border'
+        )}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          accept=".heic,.HEIC,.heif,.HEIF,image/heic,image/heif"
+          onChange={handleInputChange}
+          className="hidden"
+          disabled={disabled}
+        />
+
+        <div className="flex items-center justify-center gap-2 py-3 px-4">
+          <Plus className="size-4 text-muted-foreground group-hover:text-primary transition-colors" />
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+            {isDragOver ? 'Drop files here' : 'Add more files'}
+          </span>
+        </div>
+      </div>
+    )
+  }
+
+  // Expanded version - full dropzone
   return (
     <div
       onClick={handleClick}

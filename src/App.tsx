@@ -90,6 +90,7 @@ function App() {
             <FileDropZone
               onFilesSelected={addFiles}
               disabled={isConverting}
+              collapsed={hasFiles}
             />
 
             {hasFiles && (
