@@ -1,4 +1,4 @@
-import { ImageIcon, ShieldCheck } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 
 export function Header() {
   return (
@@ -7,7 +7,7 @@ export function Header() {
         <div className="relative">
           <div className="absolute inset-0 bg-primary/20 blur-xl rounded-full" />
           <div className="relative aspect-square bg-gradient-to-br from-primary/80 to-primary/50 p-3 rounded-2xl shadow-lg">
-            <ImageIcon className="size-8 text-primary-foreground" />
+            <span className="text-3xl" role="img" aria-label="Grasshopper">🦗</span>
           </div>
         </div>
         <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
