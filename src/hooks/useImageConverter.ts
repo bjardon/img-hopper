@@ -25,6 +25,8 @@ export function useImageConverter() {
   const blobUrlsRef = useRef<Set<string>>(new Set())
   const abortRef = useRef(false)
   const isConvertingRef = useRef(false)
+  const filesRef = useRef<ConversionFile[]>(files)
+  filesRef.current = files // Keep ref in sync with latest state
 
   // Cleanup blob URLs on unmount
   useEffect(() => {
@@ -151,7 +153,8 @@ export function useImageConverter() {
     if (isConvertingRef.current) return
     isConvertingRef.current = true
 
-    const pendingFiles = files.filter((f) => f.status === 'pending')
+    // Read from ref to get latest files state, avoiding stale closure
+    const pendingFiles = filesRef.current.filter((f) => f.status === 'pending')
     if (pendingFiles.length === 0) {
       isConvertingRef.current = false
       return
@@ -168,7 +171,6 @@ export function useImageConverter() {
       // Check for abort
       if (abortRef.current) break
 
-      // Fill up to MAX_CONCURRENT
       // Fill up to MAX_CONCURRENT
       while (queue.length > 0 && activePromises.length < MAX_CONCURRENT) {
         const file = queue.shift()!
@@ -188,7 +190,7 @@ export function useImageConverter() {
 
     setIsConverting(false)
     isConvertingRef.current = false
-  }, [files, outputFormat, convertFile])
+  }, [outputFormat, convertFile])
 
   const downloadFile = useCallback((file: ConversionFile) => {
     if (!file.outputBlobUrl || !file.outputBlob) return
@@ -206,16 +208,18 @@ export function useImageConverter() {
   }, [])
 
   const downloadAll = useCallback(() => {
-    const completedFiles = files.filter((f) => f.status === 'completed')
+    // Read from ref to get latest files state, avoiding stale closure
+    const completedFiles = filesRef.current.filter((f) => f.status === 'completed')
     completedFiles.forEach((file, index) => {
       // Stagger downloads to avoid browser blocking
       setTimeout(() => downloadFile(file), index * 100)
     })
-  }, [files, downloadFile])
+  }, [downloadFile])
 
   const generateThumbnail = useCallback(
     async (id: string): Promise<string | null> => {
-      const file = files.find((f) => f.id === id)
+      // Read from ref to get latest files state, avoiding stale closure
+      const file = filesRef.current.find((f) => f.id === id)
       if (!file || file.thumbnailUrl) return file?.thumbnailUrl || null
 
       try {
@@ -241,7 +245,7 @@ export function useImageConverter() {
         return null
       }
     },
-    [files, updateFile]
+    [updateFile]
   )
 
   const hasFiles = files.length > 0
