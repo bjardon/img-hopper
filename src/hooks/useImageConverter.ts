@@ -100,7 +100,6 @@ export function useImageConverter() {
       abortRef.current = false
     }, 0)
   }, [])
-  }, [])
 
   const updateFile = useCallback(
     (id: string, updates: Partial<ConversionFile>) => {
@@ -224,7 +223,6 @@ export function useImageConverter() {
       setTimeout(() => downloadFile(file), index * 100)
     })
   }, [downloadFile])
-  }, [downloadFile])
 
   const generateThumbnail = useCallback(
     async (id: string): Promise<string | null> => {
@@ -253,7 +251,6 @@ export function useImageConverter() {
         return null
       }
     },
-    [updateFile]
     [updateFile]
   )
 

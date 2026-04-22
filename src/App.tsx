@@ -27,25 +27,43 @@ function App() {
     totalCount,
   } = useImageConverter()
 
-  const prevCompletedCount = useRef(0)
+  const prevIsConvertingRef = useRef(false)
+  const batchStartCountsRef = useRef({ completed: 0, errors: 0 })
 
   // Show toast when all conversions complete
   useEffect(() => {
-    if (
-      !isConverting &&
-      completedCount > 0 &&
-      completedCount > prevCompletedCount.current
-    ) {
-      const errorCount = files.filter((f) => f.status === 'error').length
-      if (errorCount === 0) {
-        toast.success(`Successfully converted ${completedCount} file${completedCount > 1 ? 's' : ''}`)
+    const errorCount = files.filter((f) => f.status === 'error').length
+
+    if (isConverting && !prevIsConvertingRef.current) {
+      batchStartCountsRef.current = {
+        completed: completedCount,
+        errors: errorCount,
+      }
+    }
+
+    if (!isConverting && prevIsConvertingRef.current) {
+      const completedDelta =
+        completedCount - batchStartCountsRef.current.completed
+      const errorDelta = errorCount - batchStartCountsRef.current.errors
+      const processedCount = completedDelta + errorDelta
+
+      if (processedCount === 0) {
+        prevIsConvertingRef.current = isConverting
+        return
+      }
+
+      if (errorDelta === 0) {
+        toast.success(`Successfully converted ${completedDelta} file${completedDelta > 1 ? 's' : ''}`)
+      } else if (completedDelta === 0) {
+        toast.error(`Failed to convert ${errorDelta} file${errorDelta > 1 ? 's' : ''}`)
       } else {
         toast.warning(
-          `Converted ${completedCount} file${completedCount > 1 ? 's' : ''}, ${errorCount} failed`
+          `Processed ${processedCount} file${processedCount > 1 ? 's' : ''}: ${completedDelta} succeeded, ${errorDelta} failed`
         )
       }
     }
-    prevCompletedCount.current = completedCount
+
+    prevIsConvertingRef.current = isConverting
   }, [isConverting, completedCount, files])
 
   return (
