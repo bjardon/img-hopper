@@ -6,7 +6,7 @@ const MAX_CONCURRENT = 2 // Limit concurrent conversions to avoid memory issues
 const DEFAULT_QUALITY = 0.92
 
 function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}-${Math.random().toString(36).slice(2, 11)}`
 }
 
 function formatFileSize(bytes: number): string {
@@ -161,7 +161,6 @@ export function useImageConverter() {
     }
 
     setIsConverting(true)
-    abortRef.current = false
 
     // Process files in batches to limit concurrency
     const queue = [...pendingFiles]
@@ -174,12 +173,12 @@ export function useImageConverter() {
       // Fill up to MAX_CONCURRENT
       while (queue.length > 0 && activePromises.length < MAX_CONCURRENT) {
         const file = queue.shift()!
-        const promise = convertFile(file, outputFormat)
-        activePromises.push(promise)
-        promise.then(() => {
+        let promise: Promise<void>
+        promise = convertFile(file, outputFormat).finally(() => {
           const index = activePromises.indexOf(promise)
           if (index > -1) activePromises.splice(index, 1)
         })
+        activePromises.push(promise)
       }
 
       // Wait for at least one to complete before continuing
@@ -195,7 +194,12 @@ export function useImageConverter() {
   const downloadFile = useCallback((file: ConversionFile) => {
     if (!file.outputBlobUrl || !file.outputBlob) return
 
-    const extension = file.outputBlob.type.includes('png') ? 'png' : 'jpg'
+    const extension =
+      file.outputBlob.type === 'image/png'
+        ? 'png'
+        : file.outputBlob.type === 'image/jpeg'
+          ? 'jpg'
+          : 'jpg'
     const baseName = file.name.replace(/\.(heic|heif)$/i, '')
     const downloadName = `${baseName}.${extension}`
 
