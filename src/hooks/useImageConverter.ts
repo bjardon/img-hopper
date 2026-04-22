@@ -132,7 +132,6 @@ export function useImageConverter() {
           blobUrlsRef.current.delete(blobUrl)
           return
         }
-
         updateFile(file.id, {
           status: 'completed',
           progress: 100,
@@ -239,14 +238,12 @@ export function useImageConverter() {
 
         const thumbnailUrl = URL.createObjectURL(thumbnailBlob)
         blobUrlsRef.current.add(thumbnailUrl)
-
         // Check if component unmounted during conversion
         if (abortRef.current) {
           URL.revokeObjectURL(thumbnailUrl)
           blobUrlsRef.current.delete(thumbnailUrl)
           return null
         }
-
         updateFile(id, { thumbnailUrl })
         return thumbnailUrl
       } catch {
