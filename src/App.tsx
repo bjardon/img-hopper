@@ -29,12 +29,19 @@ function App() {
 
   const prevIsConvertingRef = useRef(false)
   const batchStartCountsRef = useRef({ completed: 0, errors: 0 })
+  const cancelledBatchRef = useRef(false)
+
+  const handleClear = () => {
+    cancelledBatchRef.current = isConverting
+    clearFiles()
+  }
 
   // Show toast when all conversions complete
   useEffect(() => {
     const errorCount = files.filter((f) => f.status === 'error').length
 
     if (isConverting && !prevIsConvertingRef.current) {
+      cancelledBatchRef.current = false
       batchStartCountsRef.current = {
         completed: completedCount,
         errors: errorCount,
@@ -47,7 +54,8 @@ function App() {
       const errorDelta = errorCount - batchStartCountsRef.current.errors
       const processedCount = completedDelta + errorDelta
 
-      if (processedCount === 0) {
+      if (cancelledBatchRef.current || processedCount <= 0) {
+        cancelledBatchRef.current = false
         prevIsConvertingRef.current = isConverting
         return
       }
@@ -89,7 +97,7 @@ function App() {
                 outputFormat={outputFormat}
                 onOutputFormatChange={setOutputFormat}
                 onConvert={convert}
-                onClear={clearFiles}
+                onClear={handleClear}
                 onDownloadAll={downloadAll}
                 isConverting={isConverting}
                 hasFiles={hasFiles}
