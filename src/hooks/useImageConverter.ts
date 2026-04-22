@@ -10,10 +10,10 @@ function generateId(): string {
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 B'
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB']
-  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  const i = Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1)
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
 }
 
@@ -26,14 +26,19 @@ export function useImageConverter() {
   const abortRef = useRef(false)
   const isConvertingRef = useRef(false)
   const filesRef = useRef<ConversionFile[]>(files)
-  filesRef.current = files // Keep ref in sync with latest state
+
+  useEffect(() => {
+    filesRef.current = files
+  }, [files])
 
   // Cleanup blob URLs on unmount
   useEffect(() => {
+    const blobUrls = blobUrlsRef.current
+
     return () => {
       // Signal abort to prevent ongoing conversions from creating new blob URLs
       abortRef.current = true
-      blobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
+      blobUrls.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [])
 
@@ -173,8 +178,7 @@ export function useImageConverter() {
       // Fill up to MAX_CONCURRENT
       while (queue.length > 0 && activePromises.length < MAX_CONCURRENT) {
         const file = queue.shift()!
-        let promise: Promise<void>
-        promise = convertFile(file, outputFormat).finally(() => {
+        const promise: Promise<void> = convertFile(file, outputFormat).finally(() => {
           const index = activePromises.indexOf(promise)
           if (index > -1) activePromises.splice(index, 1)
         })
