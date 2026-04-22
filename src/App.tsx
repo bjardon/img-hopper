@@ -26,6 +26,8 @@ function App() {
     completedCount,
     totalCount,
   } = useImageConverter()
+  const errorCount = files.filter((f) => f.status === 'error').length
+  const processedCount = completedCount + errorCount
 
   const prevIsConvertingRef = useRef(false)
   const batchStartCountsRef = useRef({ completed: 0, errors: 0 })
@@ -38,8 +40,6 @@ function App() {
 
   // Show toast when all conversions complete
   useEffect(() => {
-    const errorCount = files.filter((f) => f.status === 'error').length
-
     if (isConverting && !prevIsConvertingRef.current) {
       cancelledBatchRef.current = false
       batchStartCountsRef.current = {
@@ -103,7 +103,7 @@ function App() {
                 hasFiles={hasFiles}
                 hasPendingFiles={hasPendingFiles}
                 hasCompletedFiles={hasCompletedFiles}
-                completedCount={completedCount}
+                processedCount={processedCount}
                 totalCount={totalCount}
               />
             )}

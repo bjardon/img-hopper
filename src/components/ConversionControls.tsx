@@ -20,7 +20,7 @@ interface ConversionControlsProps {
   hasFiles: boolean
   hasPendingFiles: boolean
   hasCompletedFiles: boolean
-  completedCount: number
+  processedCount: number
   totalCount: number
 }
 
@@ -34,7 +34,7 @@ export function ConversionControls({
   hasFiles,
   hasPendingFiles,
   hasCompletedFiles,
-  completedCount,
+  processedCount,
   totalCount,
 }: ConversionControlsProps) {
   return (
@@ -68,7 +68,7 @@ export function ConversionControls({
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Spinner className="size-4" />
           <span>
-            Converting {completedCount}/{totalCount}...
+            Processing {processedCount}/{totalCount}...
           </span>
         </div>
       )}
