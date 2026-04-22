@@ -165,6 +165,7 @@ export function useImageConverter() {
     }
 
     setIsConverting(true)
+    abortRef.current = false
 
     // Process files in batches to limit concurrency
     const queue = [...pendingFiles]
