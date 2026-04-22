@@ -34,13 +34,20 @@ export function FileItem({
   const [isExpanded, setIsExpanded] = useState(false)
   const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false)
 
-  const handleExpand = useCallback(async () => {
-    if (!isExpanded && !file.thumbnailUrl && !isLoadingThumbnail) {
-      setIsLoadingThumbnail(true)
-      await onGenerateThumbnail(file.id)
-      setIsLoadingThumbnail(false)
+  const handleExpand = useCallback(() => {
+    if (isExpanded) {
+      setIsExpanded(false)
+      return
     }
-    setIsExpanded(!isExpanded)
+
+    setIsExpanded(true)
+
+    if (!file.thumbnailUrl && !isLoadingThumbnail) {
+      setIsLoadingThumbnail(true)
+      void onGenerateThumbnail(file.id).finally(() => {
+        setIsLoadingThumbnail(false)
+      })
+    }
   }, [isExpanded, file.thumbnailUrl, file.id, isLoadingThumbnail, onGenerateThumbnail])
 
   const statusConfig = {
