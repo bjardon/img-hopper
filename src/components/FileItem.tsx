@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import {
   FileImage,
   X,
@@ -33,6 +33,7 @@ export function FileItem({
 }: FileItemProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(false)
+  const isThumbnailRequestInFlightRef = useRef(false)
 
   const handleExpand = useCallback(() => {
     if (isExpanded) {
@@ -42,13 +43,15 @@ export function FileItem({
 
     setIsExpanded(true)
 
-    if (!file.thumbnailUrl && !isLoadingThumbnail) {
+    if (!file.thumbnailUrl && !isThumbnailRequestInFlightRef.current) {
+      isThumbnailRequestInFlightRef.current = true
       setIsLoadingThumbnail(true)
       void onGenerateThumbnail(file.id).finally(() => {
+        isThumbnailRequestInFlightRef.current = false
         setIsLoadingThumbnail(false)
       })
     }
-  }, [isExpanded, file.thumbnailUrl, file.id, isLoadingThumbnail, onGenerateThumbnail])
+  }, [isExpanded, file.thumbnailUrl, file.id, onGenerateThumbnail])
 
   const statusConfig = {
     pending: {
