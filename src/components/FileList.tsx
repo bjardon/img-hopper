@@ -1,4 +1,3 @@
-import { FileImage } from 'lucide-react'
 import { FileItem } from './FileItem'
 import type { ConversionFile } from '@/types/converter'
 
@@ -18,17 +17,7 @@ export function FileList({
   formatFileSize,
 }: FileListProps) {
   if (files.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12 text-center">
-        <div className="p-4 rounded-full bg-muted mb-4">
-          <FileImage className="size-8 text-muted-foreground" />
-        </div>
-        <p className="text-muted-foreground">No files yet</p>
-        <p className="text-sm text-muted-foreground/70">
-          Drop some HEIC files to get started
-        </p>
-      </div>
-    )
+    return null
   }
 
   return (
