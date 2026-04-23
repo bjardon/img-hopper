@@ -48,6 +48,18 @@ export function FileDropZone({ onFilesSelected, disabled, collapsed }: FileDropZ
     }
   }, [disabled])
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      if (disabled) return
+
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        inputRef.current?.click()
+      }
+    },
+    [disabled]
+  )
+
   const handleInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const { files } = e.target
@@ -65,9 +77,13 @@ export function FileDropZone({ onFilesSelected, disabled, collapsed }: FileDropZ
     return (
       <div
         onClick={handleClick}
+        onKeyDown={handleKeyDown}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-disabled={disabled}
         className={cn(
           'relative group cursor-pointer rounded-xl border-2 border-dashed transition-all duration-300',
           'hover:border-primary/50 hover:bg-primary/5',
@@ -100,9 +116,13 @@ export function FileDropZone({ onFilesSelected, disabled, collapsed }: FileDropZ
   return (
     <div
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
+      role="button"
+      tabIndex={disabled ? -1 : 0}
+      aria-disabled={disabled}
       className={cn(
         'relative group cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-300',
         'hover:border-primary/50 hover:bg-primary/5',
