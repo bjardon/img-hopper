@@ -72,7 +72,7 @@ function App() {
     }
 
     prevIsConvertingRef.current = isConverting
-  }, [isConverting, completedCount, files])
+  }, [isConverting, completedCount, errorCount, files])
 
   return (
     <div className="min-h-screen bg-background">
